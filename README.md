@@ -56,7 +56,7 @@ among themselves.
 | `src/main/java/com/example/WordReducer.java` | adds up the 1s for each word, then sorts the results by count before writing them out |
 | `src/main/java/com/example/controller/Controller.java` | configures the job and contains `main` |
 | `pom.xml` | the Maven build |
-| `docker-compose.yml`, `hadoop.env` | the cluster: NameNode, 3 DataNodes, ResourceManager, 3 NodeManagers, history server |
+| `docker-compose.yml`, `config` | the cluster: NameNode, 3 DataNodes, ResourceManager, 2 NodeManagers, history server, all on the official `apache/hadoop:3` image |
 | `shared-folder/input/data/input.txt` | **placeholder — you replace this with your own text** |
 | `Java and maven Environment setup.pdf` | installing Java and Maven, if you need it |
 
@@ -106,22 +106,20 @@ the Hadoop libraries and takes a while.
 ### 4. Copy the JAR into the ResourceManager container
 
 ```bash
-docker cp target/WordCountUsingHadoop-0.0.1-SNAPSHOT.jar \
-  resourcemanager:/opt/hadoop-3.2.1/share/hadoop/mapreduce/
+docker cp target/WordCountUsingHadoop-0.0.1-SNAPSHOT.jar resourcemanager:/tmp/
 ```
 
 ### 5. Copy your dataset into the container
 
 ```bash
-docker cp shared-folder/input/data/input.txt \
-  resourcemanager:/opt/hadoop-3.2.1/share/hadoop/mapreduce/
+docker cp shared-folder/input/data/input.txt resourcemanager:/tmp/
 ```
 
 ### 6. Open a shell in the container
 
 ```bash
-docker exec -it resourcemanager /bin/bash
-cd /opt/hadoop-3.2.1/share/hadoop/mapreduce/
+docker exec -it resourcemanager bash
+cd /tmp
 ```
 
 Everything from here until step 10 happens inside the container.
@@ -140,7 +138,7 @@ file and becomes blocks distributed across the DataNodes.
 ### 8. Run the job
 
 ```bash
-hadoop jar WordCountUsingHadoop-0.0.1-SNAPSHOT.jar \
+hadoop jar /tmp/WordCountUsingHadoop-0.0.1-SNAPSHOT.jar \
   com.example.controller.Controller /input/data/input.txt /output
 ```
 
@@ -161,15 +159,14 @@ hadoop fs -cat /output/*
 Inside the container:
 
 ```bash
-hdfs dfs -get /output /opt/hadoop-3.2.1/share/hadoop/mapreduce/
+hdfs dfs -get /output /tmp/
 exit
 ```
 
 Then on your machine:
 
 ```bash
-docker cp resourcemanager:/opt/hadoop-3.2.1/share/hadoop/mapreduce/output/ \
-  shared-folder/output/
+docker cp resourcemanager:/tmp/output/. shared-folder/output/
 ```
 
 ### 11. Stop the cluster
@@ -219,8 +216,25 @@ Anything that went wrong and what resolved it. The actual error message is worth
 
 ## Submission
 
-1. Push to the GitHub repository assigned via **GitHub Classroom**.
-2. Submit the **repository link on Canvas**.
+### 1. Make your own copy of this repository
+
+On the repository page, click the green **Use this template** button, then
+**Create a new repository**. Name it `ITCS6190-H4-<your-name>` and set the visibility to
+**Public**.
+
+Do not fork, and do not clone this repository directly. A fork or a clone still points at
+the course repository, so your work would not end up anywhere we can grade it.
+
+Then clone *your* new repository to your machine and work there.
+
+### 2. Commit your work
+
+Your input dataset, your output, and `REPORT.md`.
+
+### 3. Submit the link
+
+Post the URL of **your** repository on Canvas. Keep it public until grades are posted.
+There is no need to add the instructor or the TAs as collaborators.
 
 ---
 
@@ -232,6 +246,14 @@ Anything that went wrong and what resolved it. The actual error message is worth
 - **Job is accepted but never progresses** — the NodeManagers may not have registered yet.
   Check <http://localhost:8088> and confirm there are active nodes.
 - **`mvn` cannot resolve Hadoop dependencies** — the first build needs network access.
+- **`UnsupportedClassVersionError` when the job runs** — your JDK compiled newer bytecode
+  than the cluster can load. The cluster runs Java 8. `pom.xml` already pins
+  `maven.compiler.release` to 8, so rerun `mvn clean package`; if it persists, build with
+  a JDK 8 or 11.
+- **`Permission denied` writing inside the container** — the image runs as the `hadoop`
+  user, not root. Work in `/tmp`, as the steps above do.
+- **`ClassNotFoundException: com.example.controller.Controller`** — the JAR in the
+  container is stale. Rebuild, then repeat step 4 to copy it across again.
 - **Output is empty** — every word in your input may be shorter than three characters, or
   the job read the wrong path. Check with `hadoop fs -ls /input/data`.
 - **Ports already in use** — something else is on 9870 or 8088. Stop it, or change the port
