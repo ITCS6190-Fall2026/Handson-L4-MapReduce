@@ -5,9 +5,8 @@ CORE-SITE.XML_fs.default.name=hdfs://namenode
 CORE-SITE.XML_fs.defaultFS=hdfs://namenode
 
 HDFS-SITE.XML_dfs.namenode.rpc-address=namenode:8020
-# Three DataNodes, so the textbook replication factor of 3 works here.
-# Drop this to 1 if your machine struggles.
-HDFS-SITE.XML_dfs.replication=3
+# Two DataNodes in the light topology.
+HDFS-SITE.XML_dfs.replication=2
 
 MAPRED-SITE.XML_mapreduce.framework.name=yarn
 MAPRED-SITE.XML_yarn.app.mapreduce.am.env=HADOOP_MAPRED_HOME=/opt/hadoop
