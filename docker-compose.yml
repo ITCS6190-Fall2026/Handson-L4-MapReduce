@@ -3,6 +3,10 @@
 
 x-hadoop: &hadoop
   image: apache/hadoop:3
+  # apache/hadoop is published for linux/amd64 only. On Apple Silicon and other
+  # arm64 machines Docker emulates it. Declaring the platform here silences the
+  # mismatch warning and makes the behaviour explicit.
+  platform: linux/amd64
   env_file:
     - ./config
   restart: on-failure
