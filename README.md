@@ -58,14 +58,14 @@ among themselves.
 | `pom.xml` | the Maven build |
 | `docker-compose.yml`, `config` | the cluster: NameNode, 3 DataNodes, ResourceManager, 2 NodeManagers, history server, all on the official `apache/hadoop:3` image |
 | `shared-folder/input/data/input.txt` | **placeholder — you replace this with your own text** |
-| `Java and maven Environment setup.pdf` | installing Java and Maven, if you need it |
+| `SETUP.md` | installing Java and Maven on Windows, macOS or Linux |
 
 ---
 
 ## Prerequisites
 
 - **Docker Desktop**, running. See <https://docs.docker.com/get-started/get-docker/>.
-- **Java (JDK)** and **Maven**. The setup PDF in this repository covers both.
+- **Java (JDK)** and **Maven**. See [SETUP.md](SETUP.md) if you do not have them.
 
 Check all three before you start:
 
